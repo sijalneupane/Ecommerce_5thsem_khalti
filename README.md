@@ -18,7 +18,7 @@ A modern, full-featured ecommerce web application built with Django. This projec
 - Python 3.10+
 - Django 4.2+
 - Bootstrap 5 & Bootstrap Icons
-- SQLite (default) or PostgreSQL (optional)
+- SQLite (currently used by me) or  PostgreSQL (optional - best SQL Database for this project)
 - Khalti Payment Gateway (test mode)
 
 ## Getting Started
@@ -96,16 +96,24 @@ Visit [http://127.0.0.1:8000/store/](http://127.0.0.1:8000/store/) in your brows
 
 ## Admin Panel
 
-- Visit `/admin/` to manage products, categories, orders, and users.
+- Visit `/store/admin/` to manage products, categories, orders, and users.
 
 ## Screenshots
 
-> Add screenshots of the product list, cart, checkout, payment, and admin dashboard here.
+### Customer View
+![Home Page](image-1.png)
+![Product Details Page](image-2.png)
+![Cart Details](image-3.png)
+![Payment details form](image-4.png)
+
+### Admin View
+![Product List](image-5.png)
+![Add Product](image-6.png)
 
 ## License
 
-This project is for educational/demo purposes. For production use, review and update security, payment, and deployment settings.
+This project is for educational/demo purposes only.
 
 ---
 
-**Developed with Django, Bootstrap, and ❤️ by [Your Name]**
+**Developed with Django, Bootstrap, and ❤️ by [Sijal Neupane]**
