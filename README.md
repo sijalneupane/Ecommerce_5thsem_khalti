@@ -27,8 +27,8 @@ A modern, full-featured ecommerce web application built with Django. This projec
 
 ```bash
 # Clone the project
-https://github.com/yourusername/ecommerce_project.git
-cd ecommerce_project
+https://github.com/sijalneupane/Ecommerce_5thsem_khalti.git
+cd Ecommerce_5thsem_khalti
 ```
 
 ### 2. Create and Activate a Virtual Environment
@@ -66,6 +66,11 @@ python manage.py runserver
 ```
 
 Visit [http://127.0.0.1:8000/store/](http://127.0.0.1:8000/store/) in your browser.
+There is two type of admin interface for this project:
+#### Django Admin
+Visit [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/) to access the Django admin panel.
+#### Website Own Admin panel
+Visit [http://127.0.0.1:8000/store/admin/](http://127.0.0.1:8000/store/admin/) to access the website's own admin panel.
 
 ## Khalti Payment Integration (Test Mode)
 
