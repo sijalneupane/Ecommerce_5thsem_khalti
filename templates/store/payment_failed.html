@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed - Ecommerce Store{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white text-center">
+                <h3><i class="bi bi-x-circle"></i> Payment Failed</h3>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+                </div>
+                
+                <h4 class="text-danger mb-3">Oops! Something went wrong</h4>
+                <p class="lead">Your payment could not be processed at this time.</p>
+                
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Don't worry!</strong> Your order has not been charged. You can try again or contact our support team for assistance.
+                </div>
+                
+                <div class="mt-4">
+                    <h6>What can you do?</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-arrow-right text-primary"></i> Check your payment method details</li>
+                        <li><i class="bi bi-arrow-right text-primary"></i> Ensure sufficient balance in your account</li>
+                        <li><i class="bi bi-arrow-right text-primary"></i> Try using a different payment method</li>
+                        <li><i class="bi bi-arrow-right text-primary"></i> Contact our customer support</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'store:cart_detail' %}" class="btn btn-primary me-2">
+                        <i class="bi bi-arrow-left"></i> Back to Cart
+                    </a>
+                    <a href="{% url 'store:product_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-house"></i> Continue Shopping
+                    </a>
+                </div>
+                
+                <div class="mt-4">
+                    <small class="text-muted">
+                        Need help? Contact us at support@ecommercestore.com or call +977-XXX-XXXX
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

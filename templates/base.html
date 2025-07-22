@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Ecommerce Store{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      href="{% load static %}{% static 'css/style.css' %}"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-expand-lg navbar-dark bg-gradient shadow-lg"
+      style="background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%)"
+    >
+      <div class="container py-2">
+        <a
+          class="navbar-brand fw-bold d-flex align-items-center"
+          href="{% url 'store:product_list' %}"
+          style="font-size: 2rem; letter-spacing: 2px"
+        >
+          <img
+            src="https://img.icons8.com/color/48/000000/shopping-cart.png"
+            alt="Logo"
+            style="height: 40px; margin-right: 10px"
+          />
+          <span
+            style="
+              background: linear-gradient(90deg, #ffffff 0%, #bd7bea 100%);
+              -webkit-background-clip: text;
+              background-clip: text;
+              -webkit-text-fill-color: transparent;
+              color: transparent;
+            "
+            >Ecommerce Store</span
+          >
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto align-items-center gap-4">
+            <li class="nav-item">
+              <a
+                class="nav-link px-3 rounded-pill text-white fw-semibold"
+                style="transition: background 0.3s"
+                href="{% url 'store:product_list' %}"
+              >
+                <i class="bi bi-box-seam"></i> Products
+              </a>
+            </li>
+            <li class="nav-item position-relative">
+              <a
+                class="nav-link px-3 rounded-pill text-black fw-semibold d-flex align-items-center gap-1"
+                style="transition: background 0.3s"
+                href="{% url 'store:cart_detail' %}"
+              >
+                <i class="bi bi-cart4"></i> Cart
+                <span
+                  class="badge rounded-pill bg-warning text-dark shadow ms-2"
+                  id="cart-count"
+                  style="font-size: 0.9rem; position: static"
+                  >0</span
+                >
+              </a>
+            </li>
+            {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a
+                class="nav-link px-3 rounded-pill text-white fw-semibold"
+                style="transition: background 0.3s"
+                href="{% url 'store:order_history' %}"
+              >
+                <i class="bi bi-clock-history"></i> Orders
+              </a>
+            </li>
+            {% endif %}
+            {% if user.is_staff %}
+            <li class="nav-item">
+              <a
+                class="nav-link px-3 rounded-pill text-white fw-semibold"
+                style="
+                  transition: background 0.3s;
+                  background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
+                  color: #1e3c72 !important;
+                "
+                href="{% url 'store:admin_product_list' %}"
+              >
+                <i class="bi bi-shield-lock"></i> Admin
+              </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+              {% if user.is_authenticated %}
+              <form
+                method="post"
+                action="{% url 'store:logout' %}"
+                style="display: inline"
+              >
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="nav-link btn btn-link px-3 rounded-pill text-white fw-semibold"
+                  style="display:inline; padding:0; border:none; background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%); color: #fff; transition: background 0.3s;"
+                >
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+              </form>
+              {% else %}
+              <a
+                href="{% url 'store:login' %}"
+                class="nav-link px-3 rounded-pill text-white fw-semibold"
+                style="display:inline; padding:0; border:none; background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%); color: #fff; transition: background 0.3s;"
+              >
+                <i class="bi bi-box-arrow-in-right"></i> Login
+              </a>
+              {% endif %}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container mt-4">
+      {% if messages %} {% for message in messages %}
+      <div
+        class="alert alert-{{ message.tags }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% block content %} {% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% load static %}{% static 'js/cart.js' %}"></script>
+  </body>
+</html>

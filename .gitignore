@@ -1,0 +1,32 @@
+# Virtual environment
+/venv/
+
+# Python files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.env
+
+# Django specific
+db.sqlite3
+*.log
+/staticfiles/
+media/
+Black and Yellow Website/
+ecombolt.zip/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+# Django migrations
+**/migrations/**
+!**/migrations/__init__.py
+**/migrations/__pychache__/**.pyc
+*.pyc
+__pycache__/
