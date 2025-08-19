@@ -29,11 +29,123 @@ class SearchForm(forms.Form):
     )
 
 class SignupForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    first_name = forms.CharField(
+        max_length=30, 
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your first name'
+        }),
+        error_messages={
+            'required': 'First name is required.',
+            'max_length': 'First name cannot exceed 30 characters.'
+        }
+    )
+    last_name = forms.CharField(
+        max_length=30, 
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your last name'
+        }),
+        error_messages={
+            'required': 'Last name is required.',
+            'max_length': 'Last name cannot exceed 30 characters.'
+        }
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address'
+        }),
+        error_messages={
+            'required': 'Email address is required.',
+            'invalid': 'Please enter a valid email address.'
+        }
+    )
+    terms_accepted = forms.BooleanField(
+        required=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        }),
+        error_messages={
+            'required': 'You must accept the terms and conditions to create an account.'
+        }
+    )
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['first_name', 'last_name', 'username', 'email', 'password1', 'password2', 'terms_accepted']
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Choose a username'
+            }),
+        }
+        error_messages = {
+            'username': {
+                'required': 'Username is required.',
+                'unique': 'This username is already taken.',
+            }
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Create a strong password'
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Confirm your password'
+        })
+        
+        # Update help texts
+        self.fields['username'].help_text = None
+        self.fields['password1'].help_text = None
+        self.fields['password2'].help_text = None
+        
+        # Custom error messages for password fields
+        self.fields['password1'].error_messages = {
+            'required': 'Password is required.',
+        }
+        self.fields['password2'].error_messages = {
+            'required': 'Password confirmation is required.',
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('An account with this email already exists.')
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if len(username) < 3:
+            raise forms.ValidationError('Username must be at least 3 characters long.')
+        if not username.isalnum():
+            raise forms.ValidationError('Username can only contain letters and numbers.')
+        return username
+
+    def clean_password1(self):
+        password1 = self.cleaned_data.get('password1')
+        if len(password1) < 8:
+            raise forms.ValidationError('Password must be at least 8 characters long.')
+        if password1.isdigit():
+            raise forms.ValidationError('Password cannot be entirely numeric.')
+        if not any(char.isalpha() for char in password1):
+            raise forms.ValidationError('Password must contain at least one letter.')
+        return password1
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        if commit:
+            user.save()
+        return user
 
 class CheckoutForm(forms.ModelForm):
     class Meta:

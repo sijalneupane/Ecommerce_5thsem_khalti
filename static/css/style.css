@@ -48,28 +48,128 @@ body {
     border-radius: 25px;
     transition: all 0.3s ease;
     position: relative;
-    overflow: hidden;
+    color: rgba(255, 255, 255, 0.8) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navbar-nav .nav-link i {
+    font-size: 1rem;
+    width: 1.2rem;
+    text-align: center;
+}
+
+.navbar-nav .nav-link span {
+    white-space: nowrap;
+}
+
+.navbar-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Active Navigation Item Styles */
+.navbar-nav .nav-link.active-nav-item {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    transform: translateY(-1px);
+    position: relative;
+}
+
+.navbar-nav .nav-link.active-nav-item::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24, #ffa502, #ff6348);
+    border-radius: 27px;
+    z-index: -1;
+    animation: activeGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes activeGlow {
+    0% {
+        box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 20px rgba(255, 107, 107, 0.8), 0 0 30px rgba(255, 107, 107, 0.4);
+    }
+}
+
+/* Admin Active Navigation */
+.navbar-nav .nav-link.active-admin-nav {
+    background: linear-gradient(45deg, #f7971e, #ffd200) !important;
+    color: #1e3c72 !important;
+    box-shadow: 0 4px 15px rgba(247, 151, 30, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Cart Nav Special Styling */
+.navbar-nav .nav-link.cart-nav {
+    color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.navbar-nav .nav-link.cart-nav.active-nav-item {
+    background: linear-gradient(45deg, #ffeaa7, #fdcb6e) !important;
+    color: #2d3436 !important;
+}
+
+/* Page Indicator Styles */
+.page-indicator {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.page-indicator .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.page-indicator h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-indicator .breadcrumb {
+    background: none;
+    margin: 0;
+    padding: 0;
+}
+
+.page-indicator .breadcrumb-item {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.page-indicator .breadcrumb-item.active {
+    color: white;
+    font-weight: 600;
+}
+
+.page-indicator .breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: bold;
 }
 
 .navbar-nav .nav-link:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.navbar-nav .nav-link::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -50%;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.navbar-nav .nav-link:hover::before {
-    left: 100%;
 }
 
 /* Cart Badge */
@@ -144,6 +244,15 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Dashboard card text override for better visibility */
+.card.text-white .card-text,
+.bg-primary .card-text,
+.bg-warning .card-text,
+.bg-success .card-text,
+.bg-info .card-text {
+    color: white !important;
+}
+
 /* Price Display */
 .price-display, .card-text strong {
     background: var(--success-gradient);
@@ -166,21 +275,6 @@ body {
     letter-spacing: 0.3px;
     position: relative;
     overflow: hidden;
-}
-
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.btn:hover::before {
-    left: 100%;
 }
 
 .btn-primary {
@@ -592,4 +686,275 @@ body {
 
 .login-btn:hover {
     transform: translateY(-2px);
+}
+
+/* Signup Form Styles */
+.signup-container {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.signup-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.signup-header h1 {
+    color: #333;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.signup-header p {
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 0;
+}
+
+.signup-form .form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.signup-form .input-group {
+    margin-bottom: 5px;
+}
+
+.signup-form .input-group-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px 0 0 8px;
+    width: 45px;
+    justify-content: center;
+}
+
+.signup-form .form-control {
+    border: 2px solid #e9ecef;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 15px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.signup-form .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none;
+}
+
+.signup-form .form-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+.password-requirements {
+    margin-top: 8px;
+}
+
+.password-requirements small {
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.toggle-password {
+    border: 2px solid #e9ecef;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    background: #f8f9fa;
+    color: #6c757d;
+    padding: 0 12px;
+}
+
+.toggle-password:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.form-check {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.form-check-label {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.signup-btn {
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.signup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4c93 100%);
+}
+
+.signup-footer .divider {
+    text-align: center;
+    position: relative;
+    margin: 20px 0;
+}
+
+.signup-footer .divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e9ecef;
+}
+
+.signup-footer .divider span {
+    background: white;
+    padding: 0 15px;
+    color: #6c757d;
+    font-size: 14px;
+    position: relative;
+}
+
+.social-signup .btn {
+    padding: 12px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.social-signup .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.login-link p {
+    color: #666;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.login-link a {
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+/* Enhanced form animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.signup-container {
+    animation: slideInUp 0.6s ease-out;
+}
+
+.form-group {
+    animation: slideInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-group:nth-child(2) { animation-delay: 0.2s; }
+.form-group:nth-child(3) { animation-delay: 0.3s; }
+.form-group:nth-child(4) { animation-delay: 0.4s; }
+.form-group:nth-child(5) { animation-delay: 0.5s; }
+.form-group:nth-child(6) { animation-delay: 0.6s; }
+
+/* Scroll to Top Button */
+.scroll-to-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(100px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scroll-to-top-btn.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.scroll-to-top-btn:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4c93 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.scroll-to-top-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.scroll-to-top-btn i {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .scroll-to-top-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .scroll-to-top-btn i {
+        font-size: 16px;
+    }
 }

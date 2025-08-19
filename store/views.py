@@ -11,6 +11,8 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.urls import reverse
+from django.contrib.auth import authenticate, login, logout
+from functools import wraps
 import json
 import requests
 import uuid
@@ -18,7 +20,15 @@ import uuid
 from .models import Product, Category, Cart, CartItem, Order, OrderItem
 from .forms import ProductForm, SearchForm, SignupForm, CheckoutForm
 
-from django.contrib.auth import authenticate, login, logout
+
+def non_admin_required(view_func):
+    """Decorator to redirect admin users to admin dashboard"""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+            return redirect('store:admin_dashboard')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('store:product_list')
@@ -75,6 +85,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('store:product_list')
+@non_admin_required
 def product_list(request):
     products = Product.objects.filter(available=True)
     categories = Category.objects.all()
@@ -106,6 +117,7 @@ def product_list(request):
     }
     return render(request, 'store/product_list.html', context)
 
+@non_admin_required
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug, available=True)
     return render(request, 'store/product_detail.html', {'product': product})
@@ -150,6 +162,7 @@ def merge_carts(user, session_key):
         pass
 
 @require_POST
+@non_admin_required
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     cart = get_or_create_cart(request)
@@ -174,16 +187,22 @@ def add_to_cart(request, product_id):
     messages.success(request, f'{product.name} added to cart')
     return redirect('store:product_detail', slug=product.slug)
 
+@non_admin_required
 def cart_detail(request):
     cart = get_or_create_cart(request)
     return render(request, 'store/cart.html', {'cart': cart})
 
 def cart_count(request):
+    # Return 0 for admin users
+    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+        return JsonResponse({'count': 0})
+        
     cart = get_or_create_cart(request)
     count = cart.get_total_items() if cart else 0
     return JsonResponse({'count': count})
 
 @require_POST
+@non_admin_required
 def update_cart(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
     quantity = int(request.POST.get('quantity', 1))
@@ -198,6 +217,7 @@ def update_cart(request, item_id):
     
     return redirect('store:cart_detail')
 
+@non_admin_required
 def remove_from_cart(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
     product_name = cart_item.product.name
@@ -360,6 +380,7 @@ def admin_order_update_status(request, order_id):
     return render(request, 'store/admin/order_update_status.html', context)
 
 # Checkout and Payment Views
+@non_admin_required
 def checkout(request):
     # Check if user is authenticated before proceeding with checkout
     if not request.user.is_authenticated:
@@ -406,6 +427,7 @@ def checkout(request):
     }
     return render(request, 'store/checkout.html', context)
 
+@non_admin_required
 def payment(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
     
@@ -676,11 +698,13 @@ def khalti_verify(request):
             'message': f'Error processing payment: {str(e)}'
         })
 
+@non_admin_required
 def payment_success(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
     return render(request, 'store/payment_success.html', {'order': order})
 
 @csrf_exempt
+@non_admin_required
 def test_khalti_api(request):
     """Test Khalti API connectivity and credentials"""
     if request.method == 'GET':
@@ -725,9 +749,11 @@ def test_khalti_api(request):
     
     return JsonResponse({'message': 'Use GET request to test'})
 
+@non_admin_required
 def payment_failed(request):
     return render(request, 'store/payment_failed.html')
 
+@non_admin_required
 def order_history(request):
     if request.user.is_authenticated:
         orders = Order.objects.filter(user=request.user).order_by('-created_at')
@@ -736,6 +762,7 @@ def order_history(request):
     
     return render(request, 'store/order_history.html', {'orders': orders})
 
+@non_admin_required
 def order_detail(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
     

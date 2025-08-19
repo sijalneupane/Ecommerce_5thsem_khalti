@@ -13,11 +13,16 @@
       rel="stylesheet"
     />
     <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
       href="{% load static %}{% static 'css/style.css' %}"
       rel="stylesheet"
     />
   </head>
   <body>
+    {% load nav_tags %}
     <nav
       class="navbar navbar-expand-lg navbar-dark bg-gradient shadow-lg"
       style="background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%)"
@@ -25,7 +30,7 @@
       <div class="container py-2">
         <a
           class="navbar-brand fw-bold d-flex align-items-center"
-          href="{% url 'store:product_list' %}"
+          href="{% if user.is_staff or user.is_superuser %}{% url 'store:admin_dashboard' %}{% else %}{% url 'store:product_list' %}{% endif %}"
           style="font-size: 2rem; letter-spacing: 2px"
         >
           <img
@@ -57,22 +62,26 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto align-items-center gap-4">
+            {% if not user.is_staff and not user.is_superuser %}
+            <!-- Customer Navigation -->
             <li class="nav-item">
               <a
-                class="nav-link px-3 rounded-pill text-white fw-semibold"
+                class="{% nav_class 'store:product_list' %}"
                 style="transition: background 0.3s"
                 href="{% url 'store:product_list' %}"
               >
-                <i class="bi bi-box-seam"></i> Products
+                <i class="bi bi-box-seam"></i>
+                <span>Products</span>
               </a>
             </li>
             <li class="nav-item position-relative">
               <a
-                class="nav-link px-3 rounded-pill text-black fw-semibold d-flex align-items-center gap-1"
+                class="{% nav_class 'store:cart_detail' 'nav-link px-3 rounded-pill fw-semibold cart-nav' 'active-nav-item' %}"
                 style="transition: background 0.3s"
                 href="{% url 'store:cart_detail' %}"
               >
-                <i class="bi bi-cart4"></i> Cart
+                <i class="bi bi-cart4"></i>
+                <span>Cart</span>
                 <span
                   class="badge rounded-pill bg-warning text-dark shadow ms-2"
                   id="cart-count"
@@ -84,26 +93,60 @@
             {% if user.is_authenticated %}
             <li class="nav-item">
               <a
-                class="nav-link px-3 rounded-pill text-white fw-semibold"
+                class="{% nav_class 'store:order_history' %}"
                 style="transition: background 0.3s"
                 href="{% url 'store:order_history' %}"
               >
-                <i class="bi bi-clock-history"></i> Orders
+                <i class="bi bi-clock-history"></i>
+                <span>Orders</span>
               </a>
             </li>
             {% endif %}
-            {% if user.is_staff %}
+            {% endif %}
+            
+            {% if user.is_staff or user.is_superuser %}
+            <!-- Admin Navigation -->
+            <li class="nav-item">
+              <a
+                class="{% admin_nav_class 'store:admin_dashboard' %}"
+                style="transition: background 0.3s"
+                href="{% url 'store:admin_dashboard' %}"
+              >
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="{% admin_nav_class 'store:admin_order_list' 'store:admin_order_detail' 'store:admin_order_update_status' %}"
+                style="transition: background 0.3s"
+                href="{% url 'store:admin_order_list' %}"
+              >
+                <i class="bi bi-list-check"></i>
+                <span>Orders</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="{% admin_nav_class 'store:admin_product_list' 'store:admin_product_create' 'store:admin_product_update' 'store:admin_product_delete' %}"
+                style="transition: background 0.3s"
+                href="{% url 'store:admin_product_list' %}"
+              >
+                <i class="bi bi-box-seam"></i>
+                <span>Products</span>
+              </a>
+            </li>
             <li class="nav-item">
               <a
                 class="nav-link px-3 rounded-pill text-white fw-semibold"
-                style="
-                  transition: background 0.3s;
-                  background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
-                  color: #1e3c72 !important;
-                "
-                href="{% url 'store:admin_product_list' %}"
+                style="transition: background 0.3s"
+                href="/admin/"
+                target="_blank"
               >
-                <i class="bi bi-shield-lock"></i> Admin
+                <i class="bi bi-shield-lock"></i>
+                <span>Django Admin</span>
+              </a>
+            </li>
               </a>
             </li>
             {% endif %}
@@ -120,7 +163,8 @@
                   class="nav-link btn btn-link px-3 rounded-pill text-white fw-semibold"
                   style="display:inline; padding:0; border:none; background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%); color: #fff; transition: background 0.3s;"
                 >
-                  <i class="bi bi-box-arrow-right"></i> Logout
+                  <i class="bi bi-box-arrow-right"></i>
+                  <span>Logout</span>
                 </button>
               </form>
               {% else %}
@@ -129,7 +173,8 @@
                 class="nav-link px-3 rounded-pill text-white fw-semibold"
                 style="display:inline; padding:0; border:none; background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%); color: #fff; transition: background 0.3s;"
               >
-                <i class="bi bi-box-arrow-in-right"></i> Login
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span>Login</span>
               </a>
               {% endif %}
             </li>
@@ -154,7 +199,42 @@
       {% endfor %} {% endif %} {% block content %} {% endblock %}
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        </main>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop" class="scroll-to-top-btn" title="Go to top">
+      <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Bootstrap JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+    ></script>
+
+    <!-- Scroll to Top JavaScript -->
+    <script>
+      // Scroll to Top Button Functionality
+      const scrollToTopBtn = document.getElementById('scrollToTop');
+      
+      // Show/hide button based on scroll position
+      window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+          scrollToTopBtn.classList.add('show');
+        } else {
+          scrollToTopBtn.classList.remove('show');
+        }
+      });
+      
+      // Smooth scroll to top when button is clicked
+      scrollToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+    </script>
+    {% if not user.is_staff and not user.is_superuser %}
     <script src="{% load static %}{% static 'js/cart.js' %}"></script>
+    {% endif %}
   </body>
 </html>
