@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Admin Dashboard</h2>
+                <div>
+                    <a href="/admin/" class="btn btn-primary">Django Admin</a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ total_orders }}</h4>
+                                    <p class="card-text">Total Orders</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-shopping-cart fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ pending_orders }}</h4>
+                                    <p class="card-text">Pending Orders</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ completed_orders }}</h4>
+                                    <p class="card-text">Completed Orders</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ total_products }}</h4>
+                                    <p class="card-text">Total Products</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-box fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Order Management</h6>
+                                    <div class="d-grid gap-2 d-md-block mb-3">
+                                        <a href="{% url 'store:admin_order_list' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-list"></i> View All Orders
+                                        </a>
+                                        <a href="{% url 'store:admin_order_list' %}?status=pending" class="btn btn-outline-warning">
+                                            <i class="fas fa-clock"></i> Pending Orders
+                                        </a>
+                                        <a href="{% url 'store:admin_order_list' %}?payment_status=completed" class="btn btn-outline-success">
+                                            <i class="fas fa-check"></i> Paid Orders
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Product Management</h6>
+                                    <div class="d-grid gap-2 d-md-block mb-3">
+                                        <a href="{% url 'store:admin_product_list' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-box"></i> View All Products
+                                        </a>
+                                        <a href="{% url 'store:admin_product_create' %}" class="btn btn-outline-success">
+                                            <i class="fas fa-plus"></i> Add Product
+                                        </a>
+                                        {% if low_stock_products > 0 %}
+                                        <span class="badge bg-danger">{{ low_stock_products }} Low Stock</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Recent Orders</h5>
+                    <a href="{% url 'store:admin_order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_orders %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Payment</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in recent_orders %}
+                                        <tr>
+                                            <td><code>{{ order.order_id|truncatechars:10 }}</code></td>
+                                            <td>{{ order.get_full_name }}</td>
+                                            <td>Rs. {{ order.total_amount }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if order.status == 'pending' %}bg-warning
+                                                    {% elif order.status == 'processing' %}bg-info
+                                                    {% elif order.status == 'shipped' %}bg-primary
+                                                    {% elif order.status == 'delivered' %}bg-success
+                                                    {% elif order.status == 'cancelled' %}bg-danger
+                                                    {% endif %}">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if order.payment_status == 'pending' %}bg-warning
+                                                    {% elif order.payment_status == 'completed' %}bg-success
+                                                    {% elif order.payment_status == 'failed' %}bg-danger
+                                                    {% elif order.payment_status == 'refunded' %}bg-secondary
+                                                    {% endif %}">
+                                                    {{ order.get_payment_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ order.created_at|date:"M d, H:i" }}</td>
+                                            <td>
+                                                <a href="{% url 'store:admin_order_detail' order.order_id %}" 
+                                                   class="btn btn-sm btn-outline-primary">View</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No orders yet</h5>
+                            <p class="text-muted">Orders will appear here once customers start placing orders.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

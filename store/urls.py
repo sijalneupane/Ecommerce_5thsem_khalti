@@ -15,7 +15,10 @@ urlpatterns = [
     # Checkout and Payment URLs
     path('checkout/', views.checkout, name='checkout'),
     path('payment/<uuid:order_id>/', views.payment, name='payment'),
+    path('khalti-initiate/', views.khalti_initiate, name='khalti_initiate'),
+    path('khalti-callback/', views.khalti_callback, name='khalti_callback'),
     path('khalti-verify/', views.khalti_verify, name='khalti_verify'),
+    path('test-khalti-api/', views.test_khalti_api, name='test_khalti_api'),
     path('payment-success/<uuid:order_id>/', views.payment_success, name='payment_success'),
     path('payment-failed/', views.payment_failed, name='payment_failed'),
     path('orders/', views.order_history, name='order_history'),
@@ -27,8 +30,14 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     
     # Admin URLs
+    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/products/', views.admin_product_list, name='admin_product_list'),
     path('admin/products/create/', views.admin_product_create, name='admin_product_create'),
     path('admin/products/<int:pk>/update/', views.admin_product_update, name='admin_product_update'),
     path('admin/products/<int:pk>/delete/', views.admin_product_delete, name='admin_product_delete'),
+    
+    # Admin Order URLs
+    path('admin/orders/', views.admin_order_list, name='admin_order_list'),
+    path('admin/orders/<uuid:order_id>/', views.admin_order_detail, name='admin_order_detail'),
+    path('admin/orders/<uuid:order_id>/update-status/', views.admin_order_update_status, name='admin_order_update_status'),
 ]

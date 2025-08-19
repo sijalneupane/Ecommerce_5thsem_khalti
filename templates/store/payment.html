@@ -37,25 +37,30 @@
                     <div class="col-md-6">
                         <h5>Payment Method</h5>
                         <div class="text-center">
-                            <!-- Test Payment Button for Development -->
+                            <!-- Khalti Test Payment Button -->
                             <div class="alert alert-info mb-3">
                                 <i class="bi bi-info-circle"></i>
-                                <strong>Development Mode:</strong> Use the test payment button below for testing
+                                <strong>Test Mode:</strong> Using Khalti test environment
+                                <br>
+                                <small>Use test credentials for payment</small>
                             </div>
                             
-                            <button id="test-payment-button" class="btn btn-success btn-lg mb-3 w-100">
-                                <i class="bi bi-check-circle"></i> Test Payment (Development)
-                            </button>
-                            
-                            <hr>
-                            
-                            <!-- Khalti Payment Button -->
                             <img src="https://khalti.com/static/img/logo1.png" alt="Khalti" class="mb-3" style="height: 50px;">
-                            <p class="text-muted">Pay securely with Khalti</p>
+                            <p class="text-muted">Pay securely with Khalti (Test Mode)</p>
                             
                             <button id="payment-button" class="btn btn-primary btn-lg w-100">
                                 <i class="bi bi-wallet2"></i> Pay NPR {{ order.total_amount|floatformat:2 }} with Khalti
                             </button>
+                            
+                            <!-- Test Instructions -->
+                            <div class="mt-3 alert alert-warning">
+                                <small>
+                                    <strong>Test Payment Instructions:</strong><br>
+                                    Use mobile: <code>9800000001</code><br>
+                                    MPIN: <code>1111</code><br>
+                                    Verification Code: <code>987654</code>
+                                </small>
+                            </div>
                             
                             <div class="mt-3">
                                 <small class="text-muted">
@@ -86,122 +91,111 @@
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <h5>Processing Payment...</h5>
-                <p class="text-muted">Please wait while we verify your payment</p>
+                <p class="text-muted">Please wait while we prepare your payment</p>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://khalti.s3.ap-south-1.amazonaws.com/KPG/dist/2020.12.17.0.0.0/khalti-checkout.iffe.js"></script>
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger"></i> Payment Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="error-message">Payment failed. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="retryPayment()">Try Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    var amountInPaisa = {{ amount_in_paisa }};
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentButton = document.getElementById("payment-button");
+        
+        if (paymentButton) {
+            paymentButton.addEventListener("click", function (e) {
+                e.preventDefault();
+                initiateKhaltiPayment();
+            });
+        }
+    });
     
-    // Test Payment Button Handler
-    document.getElementById("test-payment-button").addEventListener("click", function () {
+    function initiateKhaltiPayment() {
         // Show loading modal
-        var loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
         loadingModal.show();
         
-        // Simulate payment with test data
-        setTimeout(function() {
-            fetch('{% url "store:khalti_verify" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    token: 'test_token_' + Date.now(),
-                    amount: amountInPaisa
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                loadingModal.hide();
-                
-                if (data.success) {
-                    // Redirect to success page
-                    window.location.href = '{% url "store:payment_success" order.order_id %}';
-                } else {
-                    alert('Payment failed: ' + data.message);
-                    window.location.href = '{% url "store:payment_failed" %}';
-                }
-            })
-            .catch(error => {
-                loadingModal.hide();
-                console.error('Error:', error);
-                alert('Payment failed. Please try again.');
-                window.location.href = '{% url "store:payment_failed" %}';
-            });
-        }, 1000); // Simulate processing time
-    });
-    
-    // Khalti Payment Configuration
-    var config = {
-        "publicKey": "{{ khalti_config.public_key }}",
-        "productIdentity": "{{ order.order_id }}",
-        "productName": "Order #{{ order.order_id }}",
-        "productUrl": window.location.href,
-        "paymentPreference": [
-            "KHALTI",
-            "EBANKING",
-            "MOBILE_BANKING",
-            "CONNECT_IPS",
-            "SCT"
-        ],
-        "eventHandler": {
-            onSuccess (payload) {
-                // Show loading modal
-                var loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
-                loadingModal.show();
-                
-                // Verify payment with server
-                fetch('{% url "store:khalti_verify" %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        token: payload.token,
-                        amount: payload.amount
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    loadingModal.hide();
-                    
-                    if (data.success) {
-                        // Redirect to success page
-                        window.location.href = '{% url "store:payment_success" order.order_id %}';
-                    } else {
-                        alert('Payment verification failed: ' + data.message);
-                        window.location.href = '{% url "store:payment_failed" %}';
-                    }
-                })
-                .catch(error => {
-                    loadingModal.hide();
-                    console.error('Error:', error);
-                    alert('Payment verification failed. Please contact support.');
-                    window.location.href = '{% url "store:payment_failed" %}';
-                });
+        // Disable payment button
+        const paymentButton = document.getElementById("payment-button");
+        paymentButton.disabled = true;
+        paymentButton.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i> Processing...';
+        
+        // Make request to initiate payment
+        fetch('{% url "store:khalti_initiate" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
             },
-            onError (error) {
-                console.log(error);
-                alert('Payment failed. Please try again.');
-            },
-            onClose () {
-                console.log('Payment widget closed');
+            body: JSON.stringify({
+                order_id: '{{ order.order_id }}'
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        }
-    };
-
-    var checkout = new KhaltiCheckout(config);
+            return response.json();
+        })
+        .then(data => {
+            loadingModal.hide();
+            
+            if (data.success) {
+                // Redirect to Khalti payment page
+                console.log('Redirecting to Khalti payment page:', data.payment_url);
+                window.location.href = data.payment_url;
+            } else {
+                showError('Payment initiation failed: ' + (data.message || 'Unknown error'));
+                console.error('Payment initiation error:', data.error);
+            }
+        })
+        .catch(error => {
+            loadingModal.hide();
+            console.error('Error during payment initiation:', error);
+            showError('Payment initiation failed. Please try again.');
+        })
+        .finally(() => {
+            // Re-enable payment button
+            paymentButton.disabled = false;
+            paymentButton.innerHTML = '<i class="bi bi-wallet2"></i> Pay NPR {{ order.total_amount|floatformat:2 }} with Khalti';
+        });
+    }
     
-    document.getElementById("payment-button").addEventListener("click", function () {
-        checkout.show({amount: amountInPaisa});
-    });
+    function retryPayment() {
+        // Close error modal and try payment again
+        const errorModal = bootstrap.Modal.getInstance(document.getElementById('errorModal'));
+        errorModal.hide();
+        
+        setTimeout(function() {
+            initiateKhaltiPayment();
+        }, 500);
+    }
     
+    function showError(message) {
+        document.getElementById('error-message').textContent = message;
+        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        errorModal.show();
+    }
+    
+    // Helper function to get CSRF token
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

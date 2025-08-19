@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.urls import reverse
 import json
 import requests
 import uuid
@@ -43,14 +44,31 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
+            # Get session key before login to merge carts
+            session_key = request.session.session_key
+            
             login(request, user)
+            
+            # Merge session cart with user cart after login
+            if session_key:
+                merge_carts(user, session_key)
+            
+            # Check for next parameter to redirect after login
+            next_url = request.POST.get('next') or request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            
+            # Default redirect based on user type
             if user.is_staff or user.is_superuser:
-                return redirect('store:admin_product_list')
+                return redirect('store:admin_dashboard')
             else:
                 return redirect('store:product_list')
         else:
             messages.error(request, "Invalid credentials.")
-    return render(request, 'store/login.html')
+    
+    # Get next parameter for the login form
+    next_url = request.GET.get('next', '')
+    return render(request, 'store/login.html', {'next': next_url})
 
 
 @login_required
@@ -102,6 +120,34 @@ def get_or_create_cart(request):
             session_key = request.session.session_key
         cart, created = Cart.objects.get_or_create(session_key=session_key)
     return cart
+
+def merge_carts(user, session_key):
+    """Merge session cart with user cart after login"""
+    try:
+        # Get session cart
+        session_cart = Cart.objects.get(session_key=session_key)
+        
+        # Get or create user cart
+        user_cart, created = Cart.objects.get_or_create(user=user)
+        
+        # Merge cart items
+        for session_item in session_cart.items.all():
+            user_item, created = CartItem.objects.get_or_create(
+                cart=user_cart,
+                product=session_item.product,
+                defaults={'quantity': session_item.quantity}
+            )
+            if not created:
+                # If item already exists, add quantities
+                user_item.quantity += session_item.quantity
+                user_item.save()
+        
+        # Delete session cart after merging
+        session_cart.delete()
+        
+    except Cart.DoesNotExist:
+        # No session cart to merge
+        pass
 
 @require_POST
 def add_to_cart(request, product_id):
@@ -165,6 +211,33 @@ def is_admin(user):
 
 @login_required
 @user_passes_test(is_admin)
+def admin_dashboard(request):
+    # Get recent orders
+    recent_orders = Order.objects.all().order_by('-created_at')[:10]
+    
+    # Get order statistics
+    total_orders = Order.objects.count()
+    pending_orders = Order.objects.filter(status='pending').count()
+    completed_orders = Order.objects.filter(payment_status='completed').count()
+    
+    # Get product statistics
+    total_products = Product.objects.count()
+    available_products = Product.objects.filter(available=True).count()
+    low_stock_products = Product.objects.filter(stock__lt=10, available=True).count()
+    
+    context = {
+        'recent_orders': recent_orders,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'completed_orders': completed_orders,
+        'total_products': total_products,
+        'available_products': available_products,
+        'low_stock_products': low_stock_products,
+    }
+    return render(request, 'store/admin/dashboard.html', context)
+
+@login_required
+@user_passes_test(is_admin)
 def admin_product_list(request):
     products = Product.objects.all().order_by('-created_at')
     return render(request, 'store/admin/product_list.html', {'products': products})
@@ -206,8 +279,95 @@ def admin_product_delete(request, pk):
         return redirect('store:admin_product_list')
     return render(request, 'store/admin/product_confirm_delete.html', {'product': product})
 
+# Admin Order Views
+@login_required
+@user_passes_test(is_admin)
+def admin_order_list(request):
+    orders = Order.objects.all().order_by('-created_at')
+    
+    # Filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+    
+    # Filter by payment status
+    payment_status_filter = request.GET.get('payment_status')
+    if payment_status_filter:
+        orders = orders.filter(payment_status=payment_status_filter)
+    
+    # Search functionality
+    search_query = request.GET.get('search')
+    if search_query:
+        orders = orders.filter(
+            Q(order_id__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+    
+    # Pagination
+    paginator = Paginator(orders, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'orders': page_obj,
+        'status_choices': Order.STATUS_CHOICES,
+        'payment_status_choices': Order.PAYMENT_STATUS_CHOICES,
+        'current_status': status_filter,
+        'current_payment_status': payment_status_filter,
+        'search_query': search_query,
+    }
+    return render(request, 'store/admin/order_list.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_order_detail(request, order_id):
+    order = get_object_or_404(Order, order_id=order_id)
+    order_items = order.items.all()
+    
+    context = {
+        'order': order,
+        'order_items': order_items,
+    }
+    return render(request, 'store/admin/order_detail.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def admin_order_update_status(request, order_id):
+    order = get_object_or_404(Order, order_id=order_id)
+    
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        new_payment_status = request.POST.get('payment_status')
+        
+        if new_status and new_status in [choice[0] for choice in Order.STATUS_CHOICES]:
+            order.status = new_status
+            
+        if new_payment_status and new_payment_status in [choice[0] for choice in Order.PAYMENT_STATUS_CHOICES]:
+            order.payment_status = new_payment_status
+            
+        order.save()
+        messages.success(request, f'Order {order.order_id} status updated successfully')
+        return redirect('store:admin_order_detail', order_id=order.order_id)
+    
+    context = {
+        'order': order,
+        'status_choices': Order.STATUS_CHOICES,
+        'payment_status_choices': Order.PAYMENT_STATUS_CHOICES,
+    }
+    return render(request, 'store/admin/order_update_status.html', context)
+
 # Checkout and Payment Views
 def checkout(request):
+    # Check if user is authenticated before proceeding with checkout
+    if not request.user.is_authenticated:
+        messages.info(request, 'Please log in to proceed with checkout.')
+        login_url = reverse('store:login')
+        checkout_url = reverse('store:checkout')
+        return redirect(f'{login_url}?next={checkout_url}')
+    
     cart = get_or_create_cart(request)
     
     if not cart.items.exists():
@@ -249,10 +409,13 @@ def checkout(request):
 def payment(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
     
-    # Khalti configuration (test environment)
+    # Store order_id in session for verification
+    request.session['order_id'] = str(order_id)
+    
+    # Khalti KPG-2 configuration for sandbox
     khalti_config = {
-        'public_key': 'test_public_key_dc74e0fd57cb46cd93832aee0a390234',  # Correct test public key
-        'secret_key': 'test_secret_key_f59e8b7d18b4499bb4af332897a8f2dc',  # Correct test secret key
+        'secret_key': 'test_secret_key_f59e8b7d18b4499bb4af332897a8f2dc',
+        'base_url': 'https://dev.khalti.com/api/v2/',  # Sandbox URL
         'test_mode': True
     }
     
@@ -264,117 +427,250 @@ def payment(request, order_id):
     return render(request, 'store/payment.html', context)
 
 @csrf_exempt
-def khalti_verify(request):
+def khalti_initiate(request):
+    """Initiate Khalti payment using KPG-2 API"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Only POST method allowed'})
     
     try:
         data = json.loads(request.body)
-        token = data.get('token')
-        amount = data.get('amount')
-        order_id = request.session.get('order_id')
+        order_id = data.get('order_id')
         
         if not order_id:
-            return JsonResponse({'success': False, 'message': 'Order not found'})
+            return JsonResponse({'success': False, 'message': 'Order ID is required'})
         
         order = get_object_or_404(Order, order_id=order_id)
         
-        # For development/testing - simulate successful payment
-        # In production, you would verify with actual Khalti API
-        if True:  # Simulate successful verification
-            # Update order with payment details
-            order.khalti_token = token
-            order.khalti_transaction_id = f"test_txn_{uuid.uuid4().hex[:8]}"
-            order.payment_status = 'completed'
-            order.status = 'processing'
-            order.save()
+        # Khalti payment initiation API call
+        initiate_url = 'https://dev.khalti.com/api/v2/epayment/initiate/'
+        
+        # TODO: Replace this with your actual test secret key from https://test-admin.khalti.com
+        # Using the sample key from documentation for testing
+        secret_key = '05bf95cc57244045b8df5fad06748dab'
+        
+        headers = {
+            'Authorization': f'key {secret_key}',  # Note: lowercase 'key'
+            'Content-Type': 'application/json',
+        }
+        
+        # Build the return URL (make sure this is accessible)
+        return_url = request.build_absolute_uri('/store/khalti-callback/')
+        website_url = request.build_absolute_uri('/')
+        
+        payload = {
+            "return_url": return_url,
+            "website_url": website_url,
+            "amount": int(order.total_amount * 100),  # Amount in paisa
+            "purchase_order_id": str(order.order_id),
+            "purchase_order_name": f"Order #{order.order_id}",
+            "customer_info": {
+                "name": order.get_full_name(),
+                "email": order.email,
+                "phone": order.phone
+            },
+            "amount_breakdown": [
+                {
+                    "label": "Total Amount",
+                    "amount": int(order.total_amount * 100)
+                }
+            ],
+            "product_details": [
+                {
+                    "identity": str(item.product.id),
+                    "name": item.product.name,
+                    "total_price": int(item.get_total_price() * 100),
+                    "quantity": item.quantity,
+                    "unit_price": int(item.product.price * 100)
+                } for item in order.items.all()
+            ]
+        }
+        
+        response = requests.post(initiate_url, json=payload, headers=headers, timeout=30)
+        
+        print(f"Khalti initiate request:")
+        print(f"URL: {initiate_url}")
+        print(f"Headers: {headers}")
+        print(f"Payload: {payload}")
+        print(f"Response status: {response.status_code}")
+        print(f"Response content: {response.text}")
+        
+        if response.status_code == 200:
+            payment_data = response.json()
             
-            # Clear cart
-            cart = get_or_create_cart(request)
-            cart.items.all().delete()
-            
-            # Clear order_id from session
-            if 'order_id' in request.session:
-                del request.session['order_id']
+            # Store pidx in session for later verification
+            request.session['khalti_pidx'] = payment_data.get('pidx')
             
             return JsonResponse({
                 'success': True,
-                'message': 'Payment successful',
-                'order_id': str(order.order_id)
+                'payment_url': payment_data.get('payment_url'),
+                'pidx': payment_data.get('pidx'),
+                'expires_at': payment_data.get('expires_at'),
+                'expires_in': payment_data.get('expires_in')
             })
         else:
+            error_data = response.json() if response.content else {}
+            print(f"Khalti initiation failed: {response.status_code} - {response.text}")
             return JsonResponse({
                 'success': False,
-                'message': 'Payment verification failed'
+                'message': 'Payment initiation failed',
+                'error': error_data
             })
-    
-    except Exception as e:
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Network error during Khalti initiation: {str(e)}")
         return JsonResponse({
             'success': False,
-            'message': f'Error processing payment: {str(e)}'
+            'message': 'Network error during payment initiation. Please try again.'
+        })
+    except Exception as e:
+        print(f"Unexpected error during Khalti initiation: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': 'An unexpected error occurred. Please try again.'
         })
 
-# Alternative real Khalti verification for production
-def khalti_verify_production(request):
-    """
-    Use this function for actual Khalti integration in production
-    """
+def khalti_callback(request):
+    """Handle Khalti payment callback"""
+    pidx = request.GET.get('pidx')
+    status = request.GET.get('status')
+    transaction_id = request.GET.get('transaction_id')
+    
+    if not pidx:
+        messages.error(request, 'Invalid payment callback')
+        return redirect('store:product_list')
+    
+    # Verify the pidx matches what we stored
+    session_pidx = request.session.get('khalti_pidx')
+    if pidx != session_pidx:
+        messages.error(request, 'Payment verification failed')
+        return redirect('store:product_list')
+    
+    if status == 'Completed':
+        # Verify payment with lookup API
+        lookup_url = 'https://dev.khalti.com/api/v2/epayment/lookup/'
+        secret_key = '05bf95cc57244045b8df5fad06748dab'
+        headers = {
+            'Authorization': f'key {secret_key}',  # Note: lowercase 'key'
+            'Content-Type': 'application/json',
+        }
+        payload = {"pidx": pidx}
+        
+        try:
+            response = requests.post(lookup_url, json=payload, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                verification_data = response.json()
+                
+                if verification_data.get('status') == 'Completed':
+                    # Update order
+                    order_id = request.session.get('order_id')
+                    if order_id:
+                        order = get_object_or_404(Order, order_id=order_id)
+                        order.khalti_transaction_id = verification_data.get('transaction_id')
+                        order.payment_status = 'completed'
+                        order.status = 'processing'
+                        order.save()
+                        
+                        # Clear cart and session
+                        cart = get_or_create_cart(request)
+                        cart.items.all().delete()
+                        
+                        if 'order_id' in request.session:
+                            del request.session['order_id']
+                        if 'khalti_pidx' in request.session:
+                            del request.session['khalti_pidx']
+                        
+                        return redirect('store:payment_success', order_id=order.order_id)
+                
+            messages.error(request, 'Payment verification failed')
+            return redirect('store:payment_failed')
+            
+        except Exception as e:
+            print(f"Error during payment verification: {str(e)}")
+            messages.error(request, 'Payment verification failed')
+            return redirect('store:payment_failed')
+    
+    elif status == 'User canceled':
+        messages.warning(request, 'Payment was canceled')
+        return redirect('store:checkout')
+    else:
+        messages.error(request, f'Payment failed with status: {status}')
+        return redirect('store:payment_failed')
+
+@csrf_exempt
+def khalti_verify(request):
+    """Legacy verification endpoint - keeping for compatibility"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Only POST method allowed'})
     
     try:
         data = json.loads(request.body)
-        token = data.get('token')
-        amount = data.get('amount')
-        order_id = request.session.get('order_id')
+        pidx = data.get('pidx')
         
-        if not order_id:
-            return JsonResponse({'success': False, 'message': 'Order not found'})
+        if not pidx:
+            return JsonResponse({'success': False, 'message': 'PIDX is required'})
         
-        order = get_object_or_404(Order, order_id=order_id)
-        
-        # Verify with Khalti (production environment)
-        verification_url = 'https://khalti.com/api/v2/payment/verify/'
+        # Use the new lookup API
+        lookup_url = 'https://dev.khalti.com/api/v2/epayment/lookup/'
+        secret_key = '05bf95cc57244045b8df5fad06748dab'
         headers = {
-            'Authorization': 'Key test_secret_key_f59e8b7d18b4499bb4af332897a8f2dc'
+            'Authorization': f'key {secret_key}',  # Note: lowercase 'key'
+            'Content-Type': 'application/json',
         }
-        payload = {
-            'token': token,
-            'amount': amount
-        }
+        payload = {"pidx": pidx}
         
-        response = requests.post(verification_url, data=payload, headers=headers)
+        response = requests.post(lookup_url, json=payload, headers=headers, timeout=30)
         
         if response.status_code == 200:
             verification_data = response.json()
             
-            # Update order with payment details
-            order.khalti_token = token
-            order.khalti_transaction_id = verification_data.get('idx')
-            order.payment_status = 'completed'
-            order.status = 'processing'
-            order.save()
+            if verification_data.get('status') == 'Completed':
+                order_id = request.session.get('order_id')
+                if order_id:
+                    order = get_object_or_404(Order, order_id=order_id)
+                    order.khalti_transaction_id = verification_data.get('transaction_id')
+                    order.payment_status = 'completed'
+                    order.status = 'processing'
+                    order.save()
+                    
+                    # Clear cart and session
+                    cart = get_or_create_cart(request)
+                    cart.items.all().delete()
+                    
+                    if 'order_id' in request.session:
+                        del request.session['order_id']
+                    if 'khalti_pidx' in request.session:
+                        del request.session['khalti_pidx']
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Payment successful',
+                        'order_id': str(order.order_id),
+                        'transaction_id': verification_data.get('transaction_id')
+                    })
             
-            # Clear cart
-            cart = get_or_create_cart(request)
-            cart.items.all().delete()
-            
-            # Clear order_id from session
-            if 'order_id' in request.session:
-                del request.session['order_id']
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Payment successful',
-                'order_id': str(order.order_id)
-            })
-        else:
             return JsonResponse({
                 'success': False,
-                'message': 'Payment verification failed'
+                'message': f'Payment not completed. Status: {verification_data.get("status")}'
             })
-    
+        else:
+            print(f"Khalti lookup failed: {response.status_code} - {response.text}")
+            return JsonResponse({
+                'success': False,
+                'message': f'Payment verification failed. Status: {response.status_code}'
+            })
+            
     except Exception as e:
+        print(f"Error during Khalti verification: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': 'An error occurred during verification'
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        print(f"Error in khalti_verify: {str(e)}")
         return JsonResponse({
             'success': False,
             'message': f'Error processing payment: {str(e)}'
@@ -383,6 +679,51 @@ def khalti_verify_production(request):
 def payment_success(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
     return render(request, 'store/payment_success.html', {'order': order})
+
+@csrf_exempt
+def test_khalti_api(request):
+    """Test Khalti API connectivity and credentials"""
+    if request.method == 'GET':
+        try:
+            # Test the API with a simple request
+            test_url = 'https://dev.khalti.com/api/v2/epayment/initiate/'
+            secret_key = '05bf95cc57244045b8df5fad06748dab'
+            
+            headers = {
+                'Authorization': f'key {secret_key}',  # Note: lowercase 'key'
+                'Content-Type': 'application/json',
+            }
+            
+            # Minimal test payload
+            test_payload = {
+                "return_url": "https://example.com/",
+                "website_url": "https://example.com/",
+                "amount": 1000,  # 10 NPR in paisa
+                "purchase_order_id": "test_order_123",
+                "purchase_order_name": "Test Order",
+                "customer_info": {
+                    "name": "Test Customer",
+                    "email": "test@example.com",
+                    "phone": "9800000001"
+                }
+            }
+            
+            response = requests.post(test_url, json=test_payload, headers=headers, timeout=30)
+            
+            return JsonResponse({
+                'status_code': response.status_code,
+                'response_text': response.text,
+                'headers_sent': headers,
+                'payload_sent': test_payload
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': str(e),
+                'message': 'Failed to test Khalti API'
+            })
+    
+    return JsonResponse({'message': 'Use GET request to test'})
 
 def payment_failed(request):
     return render(request, 'store/payment_failed.html')
