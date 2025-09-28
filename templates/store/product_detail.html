@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ product.name }} - Ecommerce Store{% endblock %}
+{% block title %}{{ product.name }} - Siz E-Shop{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -19,7 +19,7 @@
         <p class="text-muted">{{ product.category.name }}</p>
         <p>{{ product.description }}</p>
         
-        <h3 class="text-primary">${{ product.price }}</h3>
+        <h3 class="text-primary">Rs {{ product.price }}</h3>
         
         {% if product.stock > 0 %}
             <p class="text-success">In Stock ({{ product.stock }} available)</p>

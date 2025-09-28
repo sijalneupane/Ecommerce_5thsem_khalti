@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Checkout - Ecommerce Store{% endblock %}
+{% block title %}Checkout - Siz E-Shop{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -103,7 +103,7 @@
                             <small class="text-muted">{{ item.quantity }}x</small>
                             {{ item.product.name }}
                         </div>
-                        <small>${{ item.get_total_price }}</small>
+                        <small>Rs {{ item.get_total_price }}</small>
                     </div>
                 {% endfor %}
                 
@@ -114,7 +114,7 @@
                 </div>
                 <div class="d-flex justify-content-between">
                     <strong>Total Amount:</strong>
-                    <strong class="text-success">${{ cart.get_total_price }}</strong>
+                    <strong class="text-success">Rs {{ cart.get_total_price }}</strong>
                 </div>
                 
                 <div class="mt-3">

@@ -6,13 +6,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Product Management</h1>
     <div>
-        <a href="{% url 'store:admin_dashboard' %}" class="btn btn-secondary">Dashboard</a>
-        <a href="{% url 'store:admin_order_list' %}" class="btn btn-secondary">Orders</a>
         <a href="{% url 'store:admin_product_create' %}" class="btn btn-primary">Add New Product</a>
     </div>
 </div>
 
-<div class="table-responsive">
+<div class="table-responsive admin-table">
     <table class="table table-striped">
         <thead>
             <tr>
@@ -38,7 +36,7 @@
                         {% endif %}
                     </td>
                     <td>{{ product.name }}</td>
-                    <td>${{ product.price }}</td>
+                    <td>Rs {{ product.price }}</td>
                     <td>{{ product.category.name }}</td>
                     <td>{{ product.stock }}</td>
                     <td>

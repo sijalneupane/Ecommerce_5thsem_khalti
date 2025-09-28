@@ -9,8 +9,6 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Order Management</h2>
                 <div>
-                    <a href="{% url 'store:admin_dashboard' %}" class="btn btn-secondary">Dashboard</a>
-                    <a href="{% url 'store:admin_product_list' %}" class="btn btn-secondary">Products</a>
                     <a href="/admin/" class="btn btn-primary">Django Admin</a>
                 </div>
             </div>
@@ -18,11 +16,11 @@
             <!-- Filters and Search -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <form method="get" class="row g-3">
+                    <form method="get" class="row g-3 admin-search-form">
                         <div class="col-md-3">
                             <label for="status" class="form-label">Order Status</label>
                             <select name="status" id="status" class="form-select">
-                                <option value="">All Statuses</option>
+                                <option value="">All Orders</option>
                                 {% for value, label in status_choices %}
                                     <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
                                         {{ label }}
@@ -33,7 +31,7 @@
                         <div class="col-md-3">
                             <label for="payment_status" class="form-label">Payment Status</label>
                             <select name="payment_status" id="payment_status" class="form-select">
-                                <option value="">All Payment Statuses</option>
+                                <option value="">All Payment Types</option>
                                 {% for value, label in payment_status_choices %}
                                     <option value="{{ value }}" {% if current_payment_status == value %}selected{% endif %}>
                                         {{ label }}
@@ -42,15 +40,15 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="search" class="form-label">Search</label>
+                            <label for="search" class="form-label">Search Orders</label>
                             <input type="text" name="search" id="search" class="form-control" 
-                                   placeholder="Search by order ID, email, or name" value="{{ search_query }}">
+                                   placeholder="Search by order ID, email, or customer name" value="{{ search_query }}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">&nbsp;</label>
                             <div>
-                                <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{% url 'store:admin_order_list' %}" class="btn btn-outline-secondary">Clear</a>
+                                <button type="submit" class="btn btn-primary">Search</button>
+                                <a href="{% url 'store:admin_order_list' %}" class="btn btn-outline-secondary">View All</a>
                             </div>
                         </div>
                     </form>
@@ -58,7 +56,7 @@
             </div>
 
             <!-- Orders Table -->
-            <div class="card">
+            <div class="card admin-table">
                 <div class="card-body">
                     {% if orders %}
                         <div class="table-responsive">

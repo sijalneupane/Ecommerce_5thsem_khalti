@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Shopping Cart - Ecommerce Store{% endblock %}
+{% block title %}Shopping Cart - Siz E-Shop{% endblock %}
 
 {% block content %}
 <h1>Shopping Cart</h1>
@@ -23,7 +23,7 @@
                         <div class="col-md-9">
                             <div class="card-body">
                                 <h5 class="card-title">{{ item.product.name }}</h5>
-                                <p class="card-text">${{ item.product.price }} each</p>
+                                <p class="card-text">Rs {{ item.product.price }} each</p>
                                 
                                 <form method="post" action="{% url 'store:update_cart' item.id %}" class="d-inline-block">
                                     {% csrf_token %}
@@ -35,7 +35,7 @@
                                 
                                 <a href="{% url 'store:remove_from_cart' item.id %}" class="btn btn-sm btn-danger ms-2">Remove</a>
                                 
-                                <p class="card-text mt-2"><strong>Subtotal: ${{ item.get_total_price }}</strong></p>
+                                <p class="card-text mt-2"><strong>Subtotal: Rs {{ item.get_total_price }}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -48,7 +48,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Order Summary</h5>
                     <p>Total Items: {{ cart.get_total_items }}</p>
-                    <h4>Total: ${{ cart.get_total_price }}</h4>
+                    <h4>Total: Rs {{ cart.get_total_price }}</h4>
                     <a href="{% url 'store:checkout' %}" class="btn btn-success w-100 mb-2">
                         <i class="bi bi-credit-card"></i> Proceed to Checkout
                     </a>

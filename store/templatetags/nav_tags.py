@@ -139,3 +139,35 @@ def page_icon(context):
         
     except:
         return 'bi-house'
+
+@register.filter
+def nepali_currency(value):
+    """
+    Formats a number as Nepali currency with proper formatting.
+    Usage: {{ price|nepali_currency }}
+    """
+    try:
+        # Convert to float and format with commas
+        amount = float(value)
+        # Format with commas for thousands
+        formatted = "{:,.2f}".format(amount)
+        return f"Rs {formatted}"
+    except (ValueError, TypeError):
+        return f"Rs {value}"
+
+@register.filter
+def nepali_currency_no_decimal(value):
+    """
+    Formats a number as Nepali currency without decimal places for whole numbers.
+    Usage: {{ price|nepali_currency_no_decimal }}
+    """
+    try:
+        amount = float(value)
+        # If it's a whole number, don't show decimals
+        if amount == int(amount):
+            formatted = "{:,}".format(int(amount))
+        else:
+            formatted = "{:,.2f}".format(amount)
+        return f"Rs {formatted}"
+    except (ValueError, TypeError):
+        return f"Rs {value}"

@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}Payment - Ecommerce Store{% endblock %}
+{% load static %}
+
+{% block title %}Payment - Siz E-Shop{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -24,12 +26,12 @@
                             {% for item in order.items.all %}
                                 <div class="d-flex justify-content-between">
                                     <span>{{ item.quantity }}x {{ item.product.name }}</span>
-                                    <span>${{ item.get_total_price }}</span>
+                                    <span>Rs {{ item.get_total_price }}</span>
                                 </div>
                             {% endfor %}
                             <hr>
                             <div class="d-flex justify-content-between">
-                                <strong>Total: ${{ order.total_amount }}</strong>
+                                <strong>Total: Rs {{ order.total_amount }}</strong>
                             </div>
                         </div>
                     </div>
@@ -38,14 +40,15 @@
                         <h5>Payment Method</h5>
                         <div class="text-center">
                             <!-- Khalti Test Payment Button -->
-                            <div class="alert alert-info mb-3">
+                            <!-- <div class="alert alert-info mb-3">
                                 <i class="bi bi-info-circle"></i>
                                 <strong>Test Mode:</strong> Using Khalti test environment
                                 <br>
                                 <small>Use test credentials for payment</small>
-                            </div>
+                            </div> -->
                             
-                            <img src="https://khalti.com/static/img/logo1.png" alt="Khalti" class="mb-3" style="height: 50px;">
+                            <!-- <img src="{% static 'media/logo/khaltilogo.png' %}" alt="Khalti" class="mb-3" style="height: 50px;"> -->
+                            <img src="https://dao578ztqooau.cloudfront.net/static/img/logo1.png" alt="Khalti" class="mb-3" style="height: 70px;">
                             <p class="text-muted">Pay securely with Khalti (Test Mode)</p>
                             
                             <button id="payment-button" class="btn btn-primary btn-lg w-100">
@@ -59,6 +62,10 @@
                                     Use mobile: <code>9800000001</code><br>
                                     MPIN: <code>1111</code><br>
                                     Verification Code: <code>987654</code>
+                                    <hr/>
+                                    <strong>
+                                        Your trust on us, our priority is to keep it safe.
+                                    </strong> 
                                 </small>
                             </div>
                             

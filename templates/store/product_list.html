@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Products - Ecommerce Store{% endblock %}
+{% block title %}Products - Siz E-Shop{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -25,12 +25,19 @@
         <div class="row">
             {% for product in page_obj %}
                 <div class="col-md-4 mb-4">
-                    <div class="card h-100">
+                    <div class="card h-100 product-card">
                         {% if product.image %}
-                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            <div class="card-img-container">
+                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                            </div>
+                            <script>
+                                console.log(`Product Image URL: {{ product.image.url }}`);
+                            </script>
                         {% else %}
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <span class="text-muted">No Image</span>
+                            <div class="card-img-container">
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center no-image">
+                                    <span class="text-muted">No Image</span>
+                                </div>
                             </div>
                         {% endif %}
                         
@@ -38,7 +45,7 @@
                             <h5 class="card-title">{{ product.name }}</h5>
                             <p class="card-text">{{ product.description|truncatewords:20 }}</p>
                             <div class="mt-auto">
-                                <p class="card-text"><strong>${{ product.price }}</strong></p>
+                                <p class="card-text"><strong>Rs {{ product.price }}</strong></p>
                                 <div class="btn-group w-80">
                                     <a href="{% url 'store:product_detail' product.slug %}" class="btn btn-outline-primary">View</a>
                                     <form method="post" action="{% url 'store:add_to_cart' product.id %}" class="d-inline">

@@ -434,7 +434,6 @@ def payment(request, order_id):
     # Store order_id in session for verification
     request.session['order_id'] = str(order_id)
     
-    # Khalti KPG-2 configuration for sandbox
     khalti_config = {
         'secret_key': 'test_secret_key_f59e8b7d18b4499bb4af332897a8f2dc',
         'base_url': 'https://dev.khalti.com/api/v2/',  # Sandbox URL
@@ -466,16 +465,14 @@ def khalti_initiate(request):
         # Khalti payment initiation API call
         initiate_url = 'https://dev.khalti.com/api/v2/epayment/initiate/'
         
-        # TODO: Replace this with your actual test secret key from https://test-admin.khalti.com
         # Using the sample key from documentation for testing
         secret_key = '05bf95cc57244045b8df5fad06748dab'
         
         headers = {
-            'Authorization': f'key {secret_key}',  # Note: lowercase 'key'
+            'Authorization': f'key {secret_key}',  
             'Content-Type': 'application/json',
         }
         
-        # Build the return URL (make sure this is accessible)
         return_url = request.build_absolute_uri('/store/khalti-callback/')
         website_url = request.build_absolute_uri('/')
         

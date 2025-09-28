@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Login - Ecommerce Store{% endblock %}
+{% block title %}Login - Siz E-Shop{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
@@ -10,13 +10,13 @@
             <p>Enter your credentials to continue</p>
         </div>
 
-        {% if messages %}
+        <!-- {% if messages %}
             <div class="messages">
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                 {% endfor %}
             </div>
-        {% endif %}
+        {% endif %} -->
 
         <form method="post">
             {% csrf_token %}

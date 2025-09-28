@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Order Details - {{ order.order_id }} - Ecommerce Store{% endblock %}
+{% block title %}Order Details - {{ order.order_id }} - Siz E-Shop{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -22,7 +22,7 @@
                         <p><strong>Order ID:</strong> {{ order.order_id }}</p>
                         <p><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y - g:i A" }}</p>
                         <p><strong>Payment Method:</strong> {{ order.payment_method|capfirst }}</p>
-                        <p><strong>Total Amount:</strong> <span class="text-success">${{ order.total_amount }}</span></p>
+                        <p><strong>Total Amount:</strong> <span class="text-success">Rs {{ order.total_amount }}</span></p>
                     </div>
                     <div class="col-md-6">
                         <p><strong>Payment Status:</strong> 
@@ -74,15 +74,15 @@
                                     </div>
                                 </td>
                                 <td>{{ item.quantity }}</td>
-                                <td>${{ item.price }}</td>
-                                <td><strong>${{ item.get_total_price }}</strong></td>
+                                <td>Rs {{ item.price }}</td>
+                                <td><strong>Rs {{ item.get_total_price }}</strong></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr>
                                 <th colspan="3" class="text-end">Total Amount:</th>
-                                <th class="text-success">${{ order.total_amount }}</th>
+                                <th class="text-success">Rs {{ order.total_amount }}</th>
                             </tr>
                         </tfoot>
                     </table>
